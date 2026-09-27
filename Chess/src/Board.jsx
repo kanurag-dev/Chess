@@ -12,6 +12,8 @@ function Board() {
   const [selectedSquare,setSelectedSquare]=useState(null);
   
   const squares = [];
+  const turn = game.turn();
+  const GameOver=game.isGameOver();
 
   for (let row = 0; row < 8; row++) {
     for (let col = 0; col < 8; col++) {
@@ -24,14 +26,30 @@ function Board() {
           className={`square ${isDark ? 'dark' : 'light'} ${isSelected ? 'selected' : ''}`}
           onClick={() => {
             if (selectedSquare) {
-                const from =toSquareName(selectedSquare.row,selectedSquare.col);
-                const to=toSquareName(row,col);
-                const move =game.move({from,to});
-                setSelectedSquare(null);
-            } else {
+                const selectedPiece=board[selectedSquare.row][selectedSquare.col];
+                if(selectedSquare.row===row && selectedSquare.col===col){
+                    setSelectedSquare(null);
+                }
+                else if(piece&& piece.color===selectedPiece.color){
+                    setSelectedSquare({row,col});
+                }
+                else{
+                    const from =toSquareName(selectedSquare.row,selectedSquare.col);
+                    const to=toSquareName(row,col);
+                    try{
+                        const move =game.move({from,to});
+                    }
+                    catch(err){
+                        console.log(err);
+                    }
+                    setSelectedSquare(null);
+                } 
+            }
+            else{
                 setSelectedSquare({ row, col });
             }
-        }}
+        }
+    }
         >
           {piece && <span className={piece.color==='w'?'piece-white':'piece-black'}>{getPieceSymbol(piece)}</span>}
         </div>
@@ -39,7 +57,7 @@ function Board() {
     }
   }
 
-  return <div className="board">{squares}</div>;
+  return <><p>{GameOver?"Game Over":(turn === 'w' ? "White's turn" : "Black's turn")}</p><div className="board">{squares}</div></>;
 }
 
 function getPieceSymbol(piece) {
