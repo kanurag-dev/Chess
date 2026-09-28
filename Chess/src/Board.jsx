@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Chess } from 'chess.js';
 import './Board.css';
+
+
+
 function toSquareName(row,col){
     const file=String.fromCharCode(97+col);
     const rank=8-row;
@@ -13,24 +16,34 @@ function Board() {
   
   const squares = [];
   const turn = game.turn();
-  const GameOver=game.isGameOver();
+  const gameOver=game.isGameOver();
 
+  const history = game.history({ verbose: true });
+  const lastMove = history[history.length - 1];
+  // console.log(lastMove);
+  
+  
   for (let row = 0; row < 8; row++) {
+    
     for (let col = 0; col < 8; col++) {
       const isDark = (row + col) % 2 === 1;
       const piece = board[row][col]; 
+      
       const isSelected=selectedSquare && selectedSquare.row===row && selectedSquare.col===col;
+      const squareName=toSquareName(row,col);
+      const isLastMove=lastMove&&(lastMove.from===squareName || lastMove.to===squareName)
+      
       squares.push(
         <div
           key={`${row}-${col}`}
-          className={`square ${isDark ? 'dark' : 'light'} ${isSelected ? 'selected' : ''}`}
+          className={`square ${isDark ? 'dark' : 'light'} ${isSelected ? 'selected' : ''} ${isLastMove?'lastmove':''}`}
           onClick={() => {
             if (selectedSquare) {
                 const selectedPiece=board[selectedSquare.row][selectedSquare.col];
                 if(selectedSquare.row===row && selectedSquare.col===col){
                     setSelectedSquare(null);
                 }
-                else if(piece&& piece.color===selectedPiece.color){
+                else if(piece&&  piece.color===selectedPiece.color){
                     setSelectedSquare({row,col});
                 }
                 else{
@@ -46,25 +59,33 @@ function Board() {
                 } 
             }
             else{
-                setSelectedSquare({ row, col });
+                if (piece && piece.color === turn) {
+    setSelectedSquare({ row, col });
+  }
             }
         }
     }
         >
-          {piece && <span className={piece.color==='w'?'piece-white':'piece-black'}>{getPieceSymbol(piece)}</span>}
+          {piece && <img src={getPieceSymbol(piece)}className='piece'/>}
         </div>
       );
     }
   }
 
-  return <><p>{GameOver?"Game Over":(turn === 'w' ? "White's turn" : "Black's turn")}</p><div className="board">{squares}</div></>;
+  return <>
+  <p>{gameOver?"Game Over":(turn === 'w' ? "White's turn" : "Black's turn")}</p>
+  <div className="board">
+    {squares}
+  </div>
+  </>;
 }
 
 function getPieceSymbol(piece) {
   const symbols = {
-    p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚',
+    p: 'pawn', r: 'rook', n: 'knight', b: 'bishop', q: 'queen', k: 'king',
   };
-  return symbols[piece.type];
+  let pieceName=`/pieces-basic-svg/${symbols[piece.type]}-${piece.color}.svg`
+  return pieceName;
   
 }
 
