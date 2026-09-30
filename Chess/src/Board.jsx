@@ -115,6 +115,8 @@ function Board() {
     }
         >
           {piece && <img src={getPieceSymbol(piece)}className='piece'/>}
+          {row===7 && <span className='file-notation'>{String.fromCharCode(97+col)}</span>}
+          {col===0 && <span className='rank-notation'>{8-row}</span>}
         </div>
       );
     }

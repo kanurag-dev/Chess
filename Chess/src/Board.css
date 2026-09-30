@@ -35,6 +35,8 @@
 .piece {
   width: 50px;
   height: 50px;
+  z-index: 1;
+  position: relative;
 }
 .square.legalSquare::after {
   content: '';
@@ -58,4 +60,22 @@
     flex-wrap: wrap;
     gap: 2px;
     width: 250px;
+}
+
+.file-notation {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 2;
+}
+
+.rank-notation {
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 2;
 }
