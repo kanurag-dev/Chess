@@ -22,10 +22,11 @@ function Board() {
   const turn = game.turn();
   const gameOver=game.isGameOver();
   const inCheck=game.inCheck();
-  console.log(inCheck);
+
   
 
   const history = game.history({ verbose: true });
+  console.log(history);
   const lastMove = history[history.length - 1];
   const legalMoves=selectedSquare?game.moves({square:toSquareName(selectedSquare.row,selectedSquare.col),verbose:true}):[];
   // console.log(lastMove);
@@ -126,6 +127,21 @@ function Board() {
       black:history[i+1],
     })
   }
+  const capturedPiece=[];
+  // for(let i=0;i<history.length;i++){
+  //   capturedPiece.push(history.captured)
+  // }
+
+  const capturedPieces = [];
+
+for(let i = 0; i < history.length; i++){
+    if(history[i].captured){
+        capturedPieces.push({
+            type: history[i].captured,
+            color: history[i].color === 'w' ? 'b' : 'w'
+        });
+    }
+}
 
   return <>
 
@@ -142,6 +158,12 @@ function Board() {
       <button onClick={()=>promote('n')}>Knight</button>
     </div>
   )}
+  <div className="captured-piece">
+    {capturedPieces.map((p, index) => (
+      
+      <img className="captured-piece-img" key={index} src={getPieceSymbol(p)}/>
+))}
+  </div>
   <div className="history-class">
   {movePairs.map((pair) => (
     <div className="move-row" key={pair.number}>
