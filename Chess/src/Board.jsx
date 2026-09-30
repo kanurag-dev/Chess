@@ -10,20 +10,43 @@ function toSquareName(row,col){
     return `${file}${rank}`;
 }
 
+
 function Board() {
   const [game] = useState(new Chess());
   const board = game.board(); 
   const [selectedSquare,setSelectedSquare]=useState(null);
   const [pendingPromotion, setPendingPromotion] = useState(null);
+  const [resetCount, setResetCount] = useState(0);
   
   const squares = [];
   const turn = game.turn();
   const gameOver=game.isGameOver();
+  const inCheck=game.inCheck();
+  console.log(inCheck);
+  
 
   const history = game.history({ verbose: true });
   const lastMove = history[history.length - 1];
   const legalMoves=selectedSquare?game.moves({square:toSquareName(selectedSquare.row,selectedSquare.col),verbose:true}):[];
   // console.log(lastMove);
+  function gameEnd(){
+    if(game.isCheckmate()){
+      return "Checkmate";
+    }
+    if(game.isStalemate()){
+      return "Stalemate";
+    }
+    if(game.isDraw()){
+      return "Draw";
+    }
+    
+    else{
+      return "Over";
+    }
+  }
+
+
+
   function promote(piece){
     game.move({
       from:pendingPromotion.from,
@@ -45,11 +68,15 @@ function Board() {
       
       const isLegalMove = legalMoves.some((move) => move.to === squareName);
       
+      const isKinginCheck=inCheck&&piece && piece.type==='k'&&piece.color===turn
+      
       squares.push(
         <div
           key={`${row}-${col}`}
-          className={`square ${isDark ? 'dark' : 'light'} ${isSelected ? 'selected' : ''} ${isLastMove?'lastmove':''} ${isLegalMove?'legalSquare':''}`}
+          className={`square ${isDark ? 'dark' : 'light'} ${isSelected ? 'selected' : ''} ${isLastMove?'lastmove':''} ${isLegalMove?'legalSquare':''} ${isKinginCheck?'check':''}`}
           onClick={() => {
+            if(game.isGameOver()||pendingPromotion!=null)return;
+
             if (selectedSquare) {
                 const selectedPiece=board[selectedSquare.row][selectedSquare.col];
                 
@@ -65,7 +92,7 @@ function Board() {
                     const to=toSquareName(row,col);
                     const isPromotion =selectedPiece.type === 'p' && ((selectedPiece.color === 'w' && to[1] === '8') || (selectedPiece.color === 'b' && to[1] === '1'));
                     try{
-                      if (isPromotion) {
+                      if (isPromotion && isLegalMove) {
                         setPendingPromotion({ from, to });
                       }
                       else {
@@ -91,9 +118,18 @@ function Board() {
       );
     }
   }
+  const movePairs=[];
+  for(let i=0;i<history.length;i+=2){
+    movePairs.push({
+      number:i/2+1,
+      white:history[i],
+      black:history[i+1],
+    })
+  }
 
   return <>
-  <p>{gameOver?"Game Over":(turn === 'w' ? "White's turn" : "Black's turn")}</p>
+
+  <p>{gameOver?`Game Over ${gameEnd()}` :(turn === 'w' ? "White's turn" : "Black's turn")}</p>
   <div className="board">
     {squares}
   </div>
@@ -106,6 +142,20 @@ function Board() {
       <button onClick={()=>promote('n')}>Knight</button>
     </div>
   )}
+  <div className="history-class">
+  {movePairs.map((pair) => (
+    <div className="move-row" key={pair.number}>
+      <span>{pair.number +" "}</span>
+      <span>{pair.white?.san + " "}</span>
+      <span>{pair.black?.san}</span>
+    </div>
+    
+  ))}
+</div>
+  <div className="reset-undo">
+    <button onClick={()=>{game.reset(); setResetCount(c=>c+1)}}>Reset</button>
+    <button onClick={()=>{game.undo();setResetCount(c=>c+1)}}>Undo</button>
+  </div>
   </>;
 }
 
