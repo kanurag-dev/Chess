@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Chess } from 'chess.js';
 import './Board.css';
 
@@ -11,22 +11,40 @@ function toSquareName(row,col){
 }
 
 
+
 function Board() {
   const [game] = useState(new Chess());
   const board = game.board(); 
   const [selectedSquare,setSelectedSquare]=useState(null);
   const [pendingPromotion, setPendingPromotion] = useState(null);
   const [resetCount, setResetCount] = useState(0);
+  useEffect(()=>{
+  fetch("http://localhost:5000").then((res)=>res.text()).then((data)=>console.log(data))
+},[])
   
   const squares = [];
   const turn = game.turn();
+  const isFlipped = turn === 'b';
   const gameOver=game.isGameOver();
   const inCheck=game.inCheck();
+
+  const rowStart = isFlipped ? 7 : 0;
+  const rowEnd = isFlipped ? -1 : 8;
+  const rowStep = isFlipped ? -1 : 1;
+  const colStart = isFlipped ? 7 : 0;
+  const colEnd = isFlipped ? -1 : 8;
+  const colStep = isFlipped ? -1 : 1;
+  const fileLabelRow=isFlipped?0:7 
+  const rankLabelCol=isFlipped?7:0 
+  
+
+
+  
 
   
 
   const history = game.history({ verbose: true });
-  console.log(history);
+
   const lastMove = history[history.length - 1];
   const legalMoves=selectedSquare?game.moves({square:toSquareName(selectedSquare.row,selectedSquare.col),verbose:true}):[];
   // console.log(lastMove);
@@ -57,9 +75,9 @@ function Board() {
     setPendingPromotion(null);
   }
   
-  for (let row = 0; row < 8; row++) {
+  for (let row = rowStart; row !== rowEnd; row += rowStep) {
     
-    for (let col = 0; col < 8; col++) {
+    for (let col = colStart; col !== colEnd; col += colStep) {
       const isDark = (row + col) % 2 === 1;
       const piece = board[row][col]; 
       
@@ -70,6 +88,7 @@ function Board() {
       const isLegalMove = legalMoves.some((move) => move.to === squareName);
       
       const isKinginCheck=inCheck&&piece && piece.type==='k'&&piece.color===turn
+      
       
       squares.push(
         <div
@@ -98,6 +117,7 @@ function Board() {
                       }
                       else {
                         const move =game.move({from,to});
+                        
                       }
                     }
                     catch(err){
@@ -115,8 +135,9 @@ function Board() {
     }
         >
           {piece && <img src={getPieceSymbol(piece)}className='piece'/>}
-          {row===7 && <span className='file-notation'>{String.fromCharCode(97+col)}</span>}
-          {col===0 && <span className='rank-notation'>{8-row}</span>}
+          
+          {row===fileLabelRow&& <span className='file-notation'>{String.fromCharCode(97+col)}</span>}
+          {col===rankLabelCol && <span className='rank-notation'>{8-row}</span>}
         </div>
       );
     }
